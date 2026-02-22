@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">AlfagemeFitTracker</string>
+
+    <!-- CREDENCIALES NUEVAS Y CORRECTAS DE LA CUENTA DE AUTH0 BUENA -->
+    <string name="com_auth0_client_id">7QpA0OnCYLtVVUtwpVpaBYcy2vGsArF0</string>
+    <string name="com_auth0_domain">dev-se458e88i8z2f343.us.auth0.com</string>
+</resources>
