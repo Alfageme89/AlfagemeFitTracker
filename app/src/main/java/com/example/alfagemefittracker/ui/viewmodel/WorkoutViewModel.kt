@@ -4,8 +4,10 @@ package com.example.alfagemefittracker.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.alfagemefittracker.data.local.Workout
+import com.example.alfagemefittracker.data.local.WorkoutLog
 import com.example.alfagemefittracker.data.remote.dto.ExerciseDto
 import com.example.alfagemefittracker.data.repository.WorkoutRepository
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -36,11 +38,33 @@ class WorkoutViewModel(
     private val _selectedExercise = MutableStateFlow<ExerciseDto?>(null)
     val selectedExercise: StateFlow<ExerciseDto?> = _selectedExercise.asStateFlow()
 
+    fun getLogsForWorkout(workoutId: Int): Flow<List<WorkoutLog>> {
+        return repository.getLogsForWorkout(workoutId)
+    }
+
     fun addWorkout(name: String, date: String) {
         viewModelScope.launch {
             repository.insertWorkout(
                 Workout(name = name, date = date)
             )
+        }
+    }
+
+    fun deleteWorkout(workout: Workout) {
+        viewModelScope.launch {
+            repository.deleteWorkout(workout)
+        }
+    }
+
+    fun addExerciseToWorkout(workoutId: Int, exercise: ExerciseDto) {
+        viewModelScope.launch {
+            repository.addExerciseToWorkout(workoutId, exercise)
+        }
+    }
+
+    fun updateWorkoutLog(workoutLog: WorkoutLog) {
+        viewModelScope.launch {
+            repository.updateWorkoutLog(workoutLog)
         }
     }
 

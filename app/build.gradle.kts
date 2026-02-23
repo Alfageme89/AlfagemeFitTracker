@@ -17,12 +17,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        // CONFIGURACIÓN DE PLACEHOLDERS SEGÚN LA GUÍA OFICIAL DE AUTH0
-        manifestPlaceholders += mapOf(
-            "auth0Domain" to "@string/com_auth0_domain",
-            "auth0Scheme" to "https"
-        )
     }
 
     buildTypes {
@@ -68,10 +62,6 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-
-    // AUTH0 - VERSIÓN ACTUALIZADA Y DEPENDENCIA JWT
-    implementation("com.auth0.android:auth0:3.11.0") // Versión de la guía
-    implementation("com.auth0.android:jwtdecode:2.0.2")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

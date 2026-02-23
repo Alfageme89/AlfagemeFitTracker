@@ -14,7 +14,11 @@ object DatabaseProvider {
                 context.applicationContext,
                 AppDatabase::class.java,
                 "fittrack_database"
-            ).build()
+            )
+            // If the schema changes, destroy the old database and create a new one.
+            // This is useful for development, but for a production app, you'd need a proper migration strategy.
+            .fallbackToDestructiveMigration()
+            .build()
             INSTANCE = instance
             instance
         }
