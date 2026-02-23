@@ -50,6 +50,12 @@ class WorkoutViewModel(
         }
     }
 
+    fun updateWorkout(workout: Workout) {
+        viewModelScope.launch {
+            repository.updateWorkout(workout)
+        }
+    }
+
     fun deleteWorkout(workout: Workout) {
         viewModelScope.launch {
             repository.deleteWorkout(workout)
@@ -65,6 +71,12 @@ class WorkoutViewModel(
     fun updateWorkoutLog(workoutLog: WorkoutLog) {
         viewModelScope.launch {
             repository.updateWorkoutLog(workoutLog)
+        }
+    }
+
+    fun deleteWorkoutLog(workoutLog: WorkoutLog) {
+        viewModelScope.launch {
+            repository.deleteWorkoutLog(workoutLog)
         }
     }
 

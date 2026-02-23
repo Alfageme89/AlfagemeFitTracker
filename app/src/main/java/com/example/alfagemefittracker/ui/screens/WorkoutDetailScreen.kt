@@ -1,6 +1,7 @@
 
 package com.example.alfagemefittracker.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,6 +16,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -26,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -35,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.alfagemefittracker.data.local.WorkoutLog
@@ -51,11 +56,28 @@ fun WorkoutDetailScreen(
     val workout = workouts.find { it.id == workoutId }
     val workoutLogs by workoutViewModel.getLogsForWorkout(workoutId).collectAsState(initial = emptyList())
 
+    var showEditWorkoutDialog by remember { mutableStateOf(false) }
+
+    if (showEditWorkoutDialog && workout != null) {
+        EditWorkoutDialog(
+            workoutName = workout.name,
+            onDismiss = { showEditWorkoutDialog = false },
+            onConfirm = {
+                newName ->
+                workoutViewModel.updateWorkout(workout.copy(name = newName))
+                showEditWorkoutDialog = false
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(workout?.name ?: "Detalle del Workout") },
                 actions = {
+                    IconButton(onClick = { showEditWorkoutDialog = true }) {
+                        Icon(Icons.Filled.Edit, contentDescription = "Editar Workout")
+                    }
                     IconButton(onClick = {
                         if (workout != null) {
                             workoutViewModel.deleteWorkout(workout)
@@ -92,7 +114,11 @@ fun WorkoutDetailScreen(
                 }
             } else {
                 items(workoutLogs) { log ->
-                    WorkoutLogCard(log = log, onUpdate = workoutViewModel::updateWorkoutLog)
+                    WorkoutLogCard(
+                        log = log,
+                        onUpdate = workoutViewModel::updateWorkoutLog,
+                        onDelete = workoutViewModel::deleteWorkoutLog
+                    )
                 }
             }
         }
@@ -100,10 +126,42 @@ fun WorkoutDetailScreen(
 }
 
 @Composable
-fun WorkoutLogCard(log: WorkoutLog, onUpdate: (WorkoutLog) -> Unit) {
+fun EditWorkoutDialog(
+    workoutName: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var text by remember { mutableStateOf(workoutName) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Editar nombre del Workout") },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it },
+                label = { Text("Nombre") }
+            )
+        },
+        confirmButton = {
+            Button(onClick = { onConfirm(text) }) {
+                Text("Guardar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
+}
+
+@Composable
+fun WorkoutLogCard(log: WorkoutLog, onUpdate: (WorkoutLog) -> Unit, onDelete: (WorkoutLog) -> Unit) {
     var sets by remember { mutableStateOf(log.sets.toString()) }
     var reps by remember { mutableStateOf(log.reps.toString()) }
     var weight by remember { mutableStateOf(log.weight.toString()) }
+    val context = LocalContext.current
 
     Card(
         modifier = Modifier
@@ -112,7 +170,12 @@ fun WorkoutLogCard(log: WorkoutLog, onUpdate: (WorkoutLog) -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = log.exerciseName, style = MaterialTheme.typography.titleLarge)
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Text(text = log.exerciseName, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                IconButton(onClick = { onDelete(log) }) {
+                    Icon(Icons.Filled.Delete, contentDescription = "Eliminar ejercicio")
+                }
+            }
             Spacer(modifier = Modifier.height(16.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -152,6 +215,7 @@ fun WorkoutLogCard(log: WorkoutLog, onUpdate: (WorkoutLog) -> Unit) {
                         weight = weight.toDoubleOrNull() ?: 0.0
                     )
                     onUpdate(updatedLog)
+                    Toast.makeText(context, "¡Guardado!", Toast.LENGTH_SHORT).show()
                 },
                 modifier = Modifier.align(Alignment.End)
             ) {

@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -17,6 +18,9 @@ interface WorkoutDao {
     // Query para obtener todos los workouts, ordenados por id descendente
     @Query("SELECT * FROM workouts ORDER BY id DESC")
     fun getAllWorkouts(): Flow<List<Workout>>
+
+    @Update
+    suspend fun updateWorkout(workout: Workout)
 
     @Delete
     suspend fun deleteWorkout(workout: Workout)

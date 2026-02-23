@@ -1,6 +1,7 @@
 package com.example.alfagemefittracker.data.local
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -18,5 +19,8 @@ interface WorkoutLogDao {
 
     @Update
     suspend fun updateWorkoutLog(workoutLog: WorkoutLog)
+
+    @Delete
+    suspend fun deleteWorkoutLog(workoutLog: WorkoutLog)
 
 }

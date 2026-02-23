@@ -21,6 +21,10 @@ class WorkoutRepository(
     suspend fun insertWorkout(workout: Workout) =
         workoutDao.insertWorkout(workout)
 
+    suspend fun updateWorkout(workout: Workout) {
+        workoutDao.updateWorkout(workout)
+    }
+
     suspend fun deleteWorkout(workout: Workout) =
         workoutDao.deleteWorkout(workout)
 
@@ -38,6 +42,10 @@ class WorkoutRepository(
 
     suspend fun updateWorkoutLog(workoutLog: WorkoutLog) {
         workoutLogDao.updateWorkoutLog(workoutLog)
+    }
+
+    suspend fun deleteWorkoutLog(workoutLog: WorkoutLog) {
+        workoutLogDao.deleteWorkoutLog(workoutLog)
     }
 
     suspend fun getExercisesFromApi(): List<ExerciseDto> {
