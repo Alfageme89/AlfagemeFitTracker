@@ -1,45 +1,26 @@
 
 package com.example.alfagemefittracker.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.alfagemefittracker.data.local.Workout
 import com.example.alfagemefittracker.data.remote.dto.ExerciseDto
 import com.example.alfagemefittracker.ui.viewmodel.ExerciseUiState
@@ -52,12 +33,22 @@ fun WorkoutListScreen(
     onNavigateToWorkoutDetail: (Int) -> Unit,
     onNavigateToExerciseDetail: (String) -> Unit,
     onNavigateToAddWorkout: () -> Unit,
+    onNavigateToSettings: () -> Unit,
 ) {
-    val workouts by workoutViewModel.workouts.collectAsState(initial = emptyList())
+    val workouts by workoutViewModel.workouts.collectAsState()
     val exerciseState by workoutViewModel.exerciseState.collectAsState()
-
+    
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf("Todos") }
+    
     var showDialog by remember { mutableStateOf(false) }
     var selectedExercise by remember { mutableStateOf<ExerciseDto?>(null) }
+
+    val categories = listOf("Todos", "Pecho", "Piernas", "Espalda", "Brazos", "Hombros", "Abdomen")
+
+    LaunchedEffect(Unit) {
+        workoutViewModel.getExercises()
+    }
 
     if (showDialog && selectedExercise != null) {
         AddExerciseToWorkoutDialog(
@@ -75,17 +66,31 @@ fun WorkoutListScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("FitTrack") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            CenterAlignedTopAppBar(
+                title = { 
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("ALFAGEME", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                        Text("FIT TRACKER", fontWeight = FontWeight.Black, fontSize = 18.sp)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(Icons.Default.Settings, contentDescription = "Ajustes")
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onNavigateToAddWorkout) {
-                Icon(Icons.Filled.Add, contentDescription = "Crear entrenamiento")
+            FloatingActionButton(
+                onClick = onNavigateToAddWorkout,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = CircleShape
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = "Nuevo")
             }
         }
     ) { paddingValues ->
@@ -93,63 +98,201 @@ fun WorkoutListScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(bottom = 80.dp)
         ) {
             item {
-                Text("Mis Entrenamientos", style = MaterialTheme.typography.headlineMedium)
+                SectionHeader(title = "MIS RUTINAS", icon = Icons.Default.List)
             }
 
             if (workouts.isEmpty()) {
-                item {
-                    EmptyState()
-                }
+                item { EmptyWorkoutsState() }
             } else {
-                items(workouts) { workout ->
-                    WorkoutCard(workout = workout, onClick = { onNavigateToWorkoutDetail(workout.id) })
+                item {
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    ) {
+                        items(workouts) { workout ->
+                            WorkoutMiniCard(workout = workout, onClick = { onNavigateToWorkoutDetail(workout.id) })
+                        }
+                    }
                 }
             }
 
             item {
-                Spacer(modifier = Modifier.height(16.dp))
-                Divider()
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Explorar Ejercicios", style = MaterialTheme.typography.headlineMedium)
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(onClick = { workoutViewModel.getExercises() }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Cargar ejercicios de la API")
+                Spacer(modifier = Modifier.height(24.dp))
+                SectionHeader(title = "EXPLORAR EJERCICIOS", icon = Icons.Default.Search)
+                
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(vertical = 12.dp)
+                ) {
+                    items(categories) { category ->
+                        FilterChip(
+                            selected = selectedCategory == category,
+                            onClick = { selectedCategory = category },
+                            label = { Text(category) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        )
+                    }
                 }
             }
 
             when (val state = exerciseState) {
                 is ExerciseUiState.Loading -> {
-                    item {
-                        Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator()
-                        }
-                    }
+                    item { LoadingBox() }
                 }
                 is ExerciseUiState.Success -> {
-                    items(state.exercises) { exercise ->
-                        ExerciseCard(exercise = exercise, onClick = {
-                            selectedExercise = exercise
-                            showDialog = true
-                        })
+                    val filteredExercises = state.exercises.filter { 
+                        (selectedCategory == "Todos" || it.bodyPart.contains(selectedCategory, ignoreCase = true)) &&
+                        it.name.contains(searchQuery, ignoreCase = true)
+                    }
+                    
+                    items(filteredExercises) { exercise ->
+                        ModernExerciseCard(
+                            exercise = exercise, 
+                            onClick = {
+                                selectedExercise = exercise
+                                showDialog = true
+                            }
+                        )
                     }
                 }
                 is ExerciseUiState.Error -> {
-                    item {
-                        Text(
-                            text = "Error: ${state.message}",
-                            color = MaterialTheme.colorScheme.error,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
+                    item { ErrorText(state.message) }
                 }
             }
         }
     }
+}
+
+@Composable
+fun SectionHeader(title: String, icon: ImageVector) {
+    Row(
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 2.sp
+        )
+    }
+}
+
+@Composable
+fun WorkoutMiniCard(workout: Workout, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .size(160.dp, 100.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.padding(16.dp).align(Alignment.BottomStart)) {
+                Text(
+                    text = workout.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
+                )
+                Text(
+                    text = workout.date,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ModernExerciseCard(exercise: ExerciseDto, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = when(exercise.bodyPart.lowercase()) {
+                        "pecho" -> Icons.Default.Favorite
+                        "piernas" -> Icons.Default.Star
+                        "espalda" -> Icons.Default.Person
+                        else -> Icons.Default.FlashOn
+                    },
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+            
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = exercise.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    text = "${exercise.bodyPart} • ${exercise.equipment}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            }
+            
+            Icon(imageVector = Icons.Default.AddCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        }
+    }
+}
+
+@Composable
+fun EmptyWorkoutsState() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(imageVector = Icons.Default.DateRange, contentDescription = null, modifier = Modifier.size(48.dp), tint = Color.Gray)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text("No hay rutinas guardadas", color = Color.Gray)
+    }
+}
+
+@Composable
+fun LoadingBox() {
+    Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+    }
+}
+
+@Composable
+fun ErrorText(message: String) {
+    Text(
+        text = "Error: $message",
+        color = MaterialTheme.colorScheme.error,
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
+        textAlign = TextAlign.Center
+    )
 }
 
 @Composable
@@ -161,74 +304,40 @@ fun AddExerciseToWorkoutDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Añadir Ejercicio") },
+        title = { Text("Añadir a mi rutina", fontWeight = FontWeight.Bold) },
         text = {
             Column {
-                Text("¿A qué entrenamiento quieres añadir \"$exerciseName\"?")
+                Text("Selecciona el entrenamiento para:\n\"$exerciseName\"", style = MaterialTheme.typography.bodyMedium)
                 Spacer(modifier = Modifier.height(16.dp))
-                LazyColumn {
-                    items(workouts) { workout ->
-                        Text(
-                            text = workout.name,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onWorkoutSelected(workout) }
-                                .padding(vertical = 12.dp)
-                        )
+                if (workouts.isEmpty()) {
+                    Text("No tienes rutinas creadas todavía.", color = Color.Gray)
+                } else {
+                    LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
+                        items(workouts) { workout ->
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onWorkoutSelected(workout) }
+                                    .padding(vertical = 4.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            ) {
+                                Text(
+                                    text = workout.name,
+                                    modifier = Modifier.padding(16.dp),
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
                     }
                 }
             }
         },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
-            }
-        }
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("CANCELAR", color = Color.Gray) }
+        },
+        shape = RoundedCornerShape(24.dp),
+        containerColor = MaterialTheme.colorScheme.surface
     )
-}
-
-
-@Composable
-fun WorkoutCard(workout: Workout, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = workout.name, style = MaterialTheme.typography.titleLarge)
-            Text(text = "Fecha: ${workout.date}", style = MaterialTheme.typography.bodyMedium)
-        }
-    }
-}
-
-@Composable
-fun ExerciseCard(exercise: ExerciseDto, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = exercise.name, style = MaterialTheme.typography.titleMedium)
-            Text(text = "Parte del cuerpo: ${exercise.bodyPart}", style = MaterialTheme.typography.bodySmall)
-        }
-    }
-}
-
-@Composable
-fun EmptyState(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.fillMaxWidth().padding(vertical = 32.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = """Aún no tienes entrenamientos.
-¡Crea uno nuevo con el botón +!""",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
-        )
-    }
 }

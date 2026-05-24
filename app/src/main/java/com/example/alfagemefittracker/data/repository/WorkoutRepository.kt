@@ -50,21 +50,35 @@ class WorkoutRepository(
 
     suspend fun getExercisesFromApi(): List<ExerciseDto> {
         return try {
-            // We try to get exercises from the real API
-            exerciseApiService.getExercises()
+            val apiExercises = exerciseApiService.getExercises()
+            if (apiExercises.isEmpty()) createFakeExercises() else apiExercises
         } catch (e: Exception) {
-            // If the API fails (e.g., HTTP 429 Too Many Requests), we return a fake list.
-            // This unblocks development and makes the app more resilient.
             createFakeExercises()
         }
     }
 
     private fun createFakeExercises(): List<ExerciseDto> {
         return listOf(
-            ExerciseDto(id = "001", name = "Press de Banca", target = "Pectoral", gifUrl = "", bodyPart = "Pecho", equipment = "Barra"),
-            ExerciseDto(id = "002", name = "Sentadilla", target = "Cuádriceps", gifUrl = "", bodyPart = "Piernas", equipment = "Barra"),
-            ExerciseDto(id = "003", name = "Dominadas", target = "Espalda", gifUrl = "", bodyPart = "Espalda", equipment = "Peso corporal"),
-            ExerciseDto(id = "004", name = "Curl de Bíceps", target = "Bíceps", gifUrl = "", bodyPart = "Brazos", equipment = "Mancuerna")
+            ExerciseDto("001", "Press de Banca", "Pectoral", "", "Pecho", "Barra"),
+            ExerciseDto("002", "Sentadilla", "Cuádriceps", "", "Piernas", "Barra"),
+            ExerciseDto("003", "Dominadas", "Espalda", "", "Espalda", "Peso corporal"),
+            ExerciseDto("004", "Curl de Bíceps", "Bíceps", "", "Brazos", "Mancuerna"),
+            ExerciseDto("005", "Press Militar", "Deltoides", "", "Hombros", "Barra"),
+            ExerciseDto("006", "Peso Muerto", "Isquios", "", "Espalda/Piernas", "Barra"),
+            ExerciseDto("007", "Zancadas", "Glúteos", "", "Piernas", "Mancuerna"),
+            ExerciseDto("008", "Fondos de Tríceps", "Tríceps", "", "Brazos", "Peso corporal"),
+            ExerciseDto("009", "Remo con Barra", "Dorsal", "", "Espalda", "Barra"),
+            ExerciseDto("010", "Plancha Abdominal", "Core", "", "Abdomen", "Peso corporal"),
+            ExerciseDto("011", "Elevaciones Laterales", "Deltoides", "", "Hombros", "Mancuerna"),
+            ExerciseDto("012", "Prensa de Piernas", "Cuádriceps", "", "Piernas", "Máquina"),
+            ExerciseDto("013", "Extensiones de Cuádriceps", "Cuádriceps", "", "Piernas", "Máquina"),
+            ExerciseDto("014", "Press Francés", "Tríceps", "", "Brazos", "Barra EZ"),
+            ExerciseDto("015", "Martillo Bíceps", "Bíceps", "", "Brazos", "Mancuerna"),
+            ExerciseDto("016", "Jalón al Pecho", "Espalda", "", "Espalda", "Polea"),
+            ExerciseDto("017", "Aperturas con Mancuerna", "Pecho", "", "Pecho", "Mancuerna"),
+            ExerciseDto("018", "Puente de Glúteo", "Glúteo", "", "Piernas", "Peso corporal"),
+            ExerciseDto("019", "Flexiones", "Pecho", "", "Pecho", "Peso corporal"),
+            ExerciseDto("020", "Burpees", "Cardio", "", "Cuerpo entero", "Peso corporal")
         )
     }
 }
