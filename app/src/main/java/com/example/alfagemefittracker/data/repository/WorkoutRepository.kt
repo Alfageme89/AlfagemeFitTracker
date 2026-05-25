@@ -15,8 +15,8 @@ class WorkoutRepository(
     private val exerciseApiService: ExerciseApiService
 ) {
 
-    fun getWorkouts(): Flow<List<Workout>> =
-        workoutDao.getAllWorkouts()
+    fun getWorkouts(userId: String): Flow<List<Workout>> =
+        workoutDao.getWorkoutsForUser(userId)
 
     suspend fun insertWorkout(workout: Workout) =
         workoutDao.insertWorkout(workout)

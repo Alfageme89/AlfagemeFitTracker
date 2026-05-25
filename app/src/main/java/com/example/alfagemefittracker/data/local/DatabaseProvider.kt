@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.room.Room
 
 object DatabaseProvider {
-
     @Volatile
     private var INSTANCE: AppDatabase? = null
 
@@ -13,11 +12,9 @@ object DatabaseProvider {
             val instance = Room.databaseBuilder(
                 context.applicationContext,
                 AppDatabase::class.java,
-                "fittrack_database"
+                "workout_database"
             )
-            // If the schema changes, destroy the old database and create a new one.
-            // This is useful for development, but for a production app, you'd need a proper migration strategy.
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration() // Esto evita el crash al cambiar la estructura
             .build()
             INSTANCE = instance
             instance

@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 data class Workout(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+    val userId: String, // ID del usuario de Auth0
     val name: String,
     val date: String
 )

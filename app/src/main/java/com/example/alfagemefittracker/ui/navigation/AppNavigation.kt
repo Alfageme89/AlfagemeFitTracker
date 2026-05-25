@@ -1,7 +1,7 @@
-
 package com.example.alfagemefittracker.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavType
@@ -26,6 +26,14 @@ object AppDestinations {
 fun AppNavigation(workoutViewModel: WorkoutViewModel, authViewModel: AuthViewModel) {
     val navController = rememberNavController()
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
+    val userProfile by authViewModel.userProfile.collectAsState()
+
+    // Sincronizamos el usuario logueado con el listado de entrenamientos usando 'sub'
+    LaunchedEffect(userProfile) {
+        userProfile?.let {
+            workoutViewModel.setCurrentUser(it.sub)
+        }
+    }
 
     NavHost(
         navController = navController, 
@@ -85,6 +93,7 @@ fun AppNavigation(workoutViewModel: WorkoutViewModel, authViewModel: AuthViewMod
                 authViewModel = authViewModel,
                 onNavigateBack = { navController.popBackStack() },
                 onLogoutSuccess = {
+                    workoutViewModel.setCurrentUser(null)
                     navController.navigate(AppDestinations.LOGIN) {
                         popUpTo(0) { inclusive = true }
                     }

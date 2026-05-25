@@ -80,7 +80,8 @@ class AuthViewModel(context: Context) : ViewModel() {
     private fun fetchUserProfile() {
         credentialsManager.getCredentials(object : Callback<Credentials, CredentialsManagerException> {
             override fun onSuccess(result: Credentials) {
-                client.userInfo(result.accessToken!!)
+                val token = result.accessToken
+                client.userInfo(token)
                     .start(object : Callback<UserProfile, AuthenticationException> {
                         override fun onSuccess(profile: UserProfile) {
                             _userProfile.value = profile

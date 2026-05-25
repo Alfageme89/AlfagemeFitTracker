@@ -7,12 +7,8 @@ import com.example.alfagemefittracker.data.local.Workout
 import com.example.alfagemefittracker.data.local.WorkoutLog
 import com.example.alfagemefittracker.data.remote.dto.ExerciseDto
 import com.example.alfagemefittracker.data.repository.WorkoutRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 sealed class ExerciseUiState {
@@ -25,7 +21,14 @@ class WorkoutViewModel(
     private val repository: WorkoutRepository
 ) : ViewModel() {
 
-    val workouts: StateFlow<List<Workout>> = repository.getWorkouts()
+    private val _currentUserId = MutableStateFlow<String?>(null)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val workouts: StateFlow<List<Workout>> = _currentUserId
+        .filterNotNull()
+        .flatMapLatest { userId ->
+            repository.getWorkouts(userId)
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -38,14 +41,19 @@ class WorkoutViewModel(
     private val _selectedExercise = MutableStateFlow<ExerciseDto?>(null)
     val selectedExercise: StateFlow<ExerciseDto?> = _selectedExercise.asStateFlow()
 
+    fun setCurrentUser(userId: String?) {
+        _currentUserId.value = userId
+    }
+
     fun getLogsForWorkout(workoutId: Int): Flow<List<WorkoutLog>> {
         return repository.getLogsForWorkout(workoutId)
     }
 
     fun addWorkout(name: String, date: String) {
+        val userId = _currentUserId.value ?: return
         viewModelScope.launch {
             repository.insertWorkout(
-                Workout(name = name, date = date)
+                Workout(userId = userId, name = name, date = date)
             )
         }
     }

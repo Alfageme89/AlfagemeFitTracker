@@ -11,13 +11,11 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface WorkoutDao {
 
-    // Al insertar un workout, si ya existe, se reemplaza
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertWorkout(workout: Workout)
 
-    // Query para obtener todos los workouts, ordenados por id descendente
-    @Query("SELECT * FROM workouts ORDER BY id DESC")
-    fun getAllWorkouts(): Flow<List<Workout>>
+    @Query("SELECT * FROM workouts WHERE userId = :userId ORDER BY id DESC")
+    fun getWorkoutsForUser(userId: String): Flow<List<Workout>>
 
     @Update
     suspend fun updateWorkout(workout: Workout)
