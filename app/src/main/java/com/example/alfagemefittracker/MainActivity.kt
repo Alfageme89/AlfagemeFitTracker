@@ -10,6 +10,8 @@ import com.example.alfagemefittracker.data.remote.RetrofitClient
 import com.example.alfagemefittracker.data.repository.WorkoutRepository
 import com.example.alfagemefittracker.ui.navigation.AppNavigation
 import com.example.alfagemefittracker.ui.theme.AlfagemeFitTrackerTheme
+import com.example.alfagemefittracker.ui.viewmodel.AuthViewModel
+import com.example.alfagemefittracker.ui.viewmodel.AuthViewModelFactory
 import com.example.alfagemefittracker.ui.viewmodel.WorkoutViewModel
 import com.example.alfagemefittracker.ui.viewmodel.WorkoutViewModelFactory
 
@@ -21,12 +23,19 @@ class MainActivity : ComponentActivity() {
         val database = DatabaseProvider.getDatabase(applicationContext)
         val exerciseApiService = RetrofitClient.instance
         val workoutRepository = WorkoutRepository(database.workoutDao(), database.workoutLogDao(), exerciseApiService)
+        
         val workoutFactory = WorkoutViewModelFactory(workoutRepository)
         val workoutViewModel: WorkoutViewModel by viewModels { workoutFactory }
+        
+        val authFactory = AuthViewModelFactory(this)
+        val authViewModel: AuthViewModel by viewModels { authFactory }
 
         setContent {
             AlfagemeFitTrackerTheme {
-                AppNavigation(workoutViewModel = workoutViewModel)
+                AppNavigation(
+                    workoutViewModel = workoutViewModel,
+                    authViewModel = authViewModel
+                )
             }
         }
     }

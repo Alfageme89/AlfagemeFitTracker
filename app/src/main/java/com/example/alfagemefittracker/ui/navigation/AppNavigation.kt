@@ -2,15 +2,19 @@
 package com.example.alfagemefittracker.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.alfagemefittracker.ui.screens.*
+import com.example.alfagemefittracker.ui.viewmodel.AuthViewModel
 import com.example.alfagemefittracker.ui.viewmodel.WorkoutViewModel
 
 object AppDestinations {
+    const val LOGIN = "login"
     const val WORKOUT_LIST = "workout_list"
     const val WORKOUT_DETAIL = "workout_detail"
     const val EXERCISE_DETAIL = "exercise_detail"
@@ -19,10 +23,24 @@ object AppDestinations {
 }
 
 @Composable
-fun AppNavigation(workoutViewModel: WorkoutViewModel) {
+fun AppNavigation(workoutViewModel: WorkoutViewModel, authViewModel: AuthViewModel) {
     val navController = rememberNavController()
+    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
 
-    NavHost(navController = navController, startDestination = AppDestinations.WORKOUT_LIST) {
+    NavHost(
+        navController = navController, 
+        startDestination = if (isAuthenticated) AppDestinations.WORKOUT_LIST else AppDestinations.LOGIN
+    ) {
+        composable(AppDestinations.LOGIN) {
+            LoginScreen(
+                authViewModel = authViewModel,
+                onLoginSuccess = {
+                    navController.navigate(AppDestinations.WORKOUT_LIST) {
+                        popUpTo(AppDestinations.LOGIN) { inclusive = true }
+                    }
+                }
+            )
+        }
         composable(AppDestinations.WORKOUT_LIST) {
             WorkoutListScreen(
                 workoutViewModel = workoutViewModel,
@@ -64,11 +82,11 @@ fun AppNavigation(workoutViewModel: WorkoutViewModel) {
         }
         composable(AppDestinations.SETTINGS) {
             SettingsScreen(
+                authViewModel = authViewModel,
                 onNavigateBack = { navController.popBackStack() },
-                onLogout = { 
-                    // Aquí iría la lógica de Auth0 después
-                    navController.navigate(AppDestinations.WORKOUT_LIST) {
-                        popUpTo(0)
+                onLogoutSuccess = {
+                    navController.navigate(AppDestinations.LOGIN) {
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )

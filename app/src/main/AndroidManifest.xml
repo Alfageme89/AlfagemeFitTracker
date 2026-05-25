@@ -24,6 +24,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Auth0 Callback Intent Filter -->
+            <intent-filter android:label="filter_auth0">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="dev-se458e88i8z2f343.us.auth0.com"
+                    android:pathPrefix="/android/com.example.alfagemefittracker/callback"
+                    android:scheme="demo" />
+            </intent-filter>
+
         </activity>
     </application>
 

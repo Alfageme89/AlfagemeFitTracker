@@ -1,8 +1,10 @@
-
 package com.example.alfagemefittracker.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -14,18 +16,32 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.alfagemefittracker.ui.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
+    authViewModel: AuthViewModel,
     onNavigateBack: () -> Unit,
-    onLogout: () -> Unit
+    onLogoutSuccess: () -> Unit
 ) {
+    val context = LocalContext.current
+    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
+    val userProfile by authViewModel.userProfile.collectAsState()
+
+    LaunchedEffect(isAuthenticated) {
+        if (!isAuthenticated) {
+            onLogoutSuccess()
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -46,6 +62,44 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
+            // Sección Perfil
+            if (userProfile != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 32.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Person,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = userProfile?.name ?: "Usuario",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = userProfile?.email ?: "",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray
+                        )
+                    }
+                }
+            }
+
             Text(
                 "Preferencias",
                 style = MaterialTheme.typography.labelLarge,
@@ -58,7 +112,7 @@ fun SettingsScreen(
                 title = "Modo Oscuro",
                 description = "Forzar interfaz oscura",
                 icon = Icons.Default.DarkMode,
-                checked = true, // Hardcoded for now as requested
+                checked = true, 
                 onCheckedChange = {}
             )
 
@@ -70,25 +124,10 @@ fun SettingsScreen(
                 onCheckedChange = {}
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
-            Text(
-                "Cuenta",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            SettingClickItem(
-                title = "Perfil de Usuario",
-                icon = Icons.Default.Person,
-                onClick = {}
-            )
-
             Spacer(modifier = Modifier.height(48.dp))
 
             Button(
-                onClick = onLogout,
+                onClick = { authViewModel.logout(context) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.errorContainer,
@@ -132,6 +171,7 @@ fun SettingToggleItem(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingClickItem(
     title: String,
