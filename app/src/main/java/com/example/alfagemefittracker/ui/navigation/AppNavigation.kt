@@ -28,10 +28,11 @@ fun AppNavigation(workoutViewModel: WorkoutViewModel, authViewModel: AuthViewMod
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
     val userProfile by authViewModel.userProfile.collectAsState()
 
-    // Sincronizamos el usuario logueado con el listado de entrenamientos usando 'sub'
+    // Sincronizamos el usuario logueado con el listado de entrenamientos
+    // Usamos el email como identificador ya que 'id' es privado y 'sub' no se reconoce directamente
     LaunchedEffect(userProfile) {
         userProfile?.let {
-            workoutViewModel.setCurrentUser(it.sub)
+            workoutViewModel.setCurrentUser(it.email ?: "anonymous")
         }
     }
 
